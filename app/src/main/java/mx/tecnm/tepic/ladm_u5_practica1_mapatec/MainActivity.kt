@@ -85,13 +85,13 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                 addMarcador(data.nombre, punto)
             }
         }
-        locacion = getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        var oyente = Oyente(this)
-        locacion.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 1f, oyente)
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
         setContentView(R.layout.activity_main)
         mapView.onCreate(savedInstanceState)
         mapView.getMapAsync(this)
+        locacion = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        var oyente = Oyente(this)
+        locacion.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 1f, oyente)
     }
 
     private fun addMarcador(texto: String, punto: GeoPoint) {
@@ -104,8 +104,18 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
     fun mostrarUbicacion(punto: GeoPoint, especial: Boolean) {
         posicionactual.setText("Ubicación actual: ${punto.latitude},${punto.longitude}")
+        moveCamara(punto)
     }
-
+    fun moveCamara(punto:GeoPoint){
+        mapa.moveCamera(
+            CameraUpdateFactory.newLatLng(
+                LatLng(
+                    punto.latitude,
+                    punto.longitude
+                )
+            )
+        )
+    }
     override fun onMapReady(p0: GoogleMap) {
         mapa = p0
         if (ActivityCompat.checkSelfPermission(
@@ -124,14 +134,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         mapa.mapType = GoogleMap.MAP_TYPE_HYBRID
         fusedLocationClient.lastLocation.addOnSuccessListener {
             var geoPosicion = GeoPoint(it.latitude, it.longitude)
-            mapa.moveCamera(
-                CameraUpdateFactory.newLatLngZoom(
-                    LatLng(
-                        geoPosicion.latitude,
-                        geoPosicion.longitude
-                    ), 20f
-                )
-            )
+            moveCamara(geoPosicion)
         }
         mapa.setOnMapClickListener {
             var punto = GeoPoint(it.latitude, it.longitude)
